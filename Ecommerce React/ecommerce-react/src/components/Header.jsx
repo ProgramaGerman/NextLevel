@@ -4,6 +4,7 @@ import { Search, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { categories } from "../lib/data";
+import logo from "../assets/Logo_Nuevo.svg";
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,13 +13,13 @@ export function Header() {
     return (
         <header className="sticky top-0 z-50 bg-card border-b border-border">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="flex items-center justify-between h-16">
+                <div className="flex items-center justify-evenly h-16">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <span className="text-primary-foreground font-bold text-sm">NLA</span>
+                        <div className="w-48 h-20 rounded-lg flex items-center justify-center">
+                            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+
                         </div>
-                        <span className="font-bold text-lg hidden sm:block">NextLevelAcademy</span>
                     </Link>
 
                     {/* Desktop Navigation */}
