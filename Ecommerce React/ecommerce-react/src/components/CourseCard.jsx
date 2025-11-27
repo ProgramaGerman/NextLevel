@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Users, ThumbsUp, ShoppingCart } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
+import { motion } from "framer-motion";
 
 /**
  * CourseCard component displays a single course
@@ -10,15 +11,21 @@ import { Badge } from "./ui/Badge";
  */
 export function CourseCard({ course }) {
     return (
-        <article className="group bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-shadow">
-            <Link to={`/curso/${course.id}`} className="block relative aspect-video">
+        <motion.article
+            className="group bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-shadow"
+            whileHover={{ y: -8 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+            <Link to={`/curso/${course.id}`} className="block relative aspect-video overflow-hidden">
                 {course.badge && (
                     <Badge className="absolute top-3 left-3 z-10 bg-primary text-primary-foreground">{course.badge}</Badge>
                 )}
-                <img
+                <motion.img
                     src={course.image || "/placeholder.svg"}
                     alt={course.title}
                     className="w-full h-full object-cover"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.4 }}
                 />
             </Link>
             <div className="p-4 space-y-3">
@@ -39,14 +46,16 @@ export function CourseCard({ course }) {
                         </span>
                     </div>
                 </div>
-                <Button
-                    variant="outline"
-                    className="w-full mt-2 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors bg-transparent"
-                >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Comprar · ${course.price}
-                </Button>
+                <Link to={`/curso/${course.id}`} className="block">
+                    <Button
+                        variant="outline"
+                        className="w-full mt-2 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors bg-transparent"
+                    >
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Comprar · ${course.price}
+                    </Button>
+                </Link>
             </div>
-        </article>
+        </motion.article>
     );
 }
