@@ -1,8 +1,9 @@
 //seccion que muestra y visualiza el producto seleccionado, donde se muestra con mas detalles la informacion del 
 //producto seleccionado y realizar la compra
 
+import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { courses } from "../lib/data";
+import { getCourseById, getRelatedCourses } from "../lib/data";
 import { Users, ThumbsUp, ShoppingCart, ArrowLeft, Star } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
@@ -13,7 +14,14 @@ import { PageTransition } from "../components/PageTransition";
 
 const Product = () => {
     const { id } = useParams();
-    const course = courses.find(c => c.id === id);
+    
+    // Use optimized lookup function
+    const course = getCourseById(id);
+    
+    // Memoize related courses to avoid recalculation
+    const relatedCourses = useMemo(() => {
+        return course ? getRelatedCourses(id, 3) : [];
+    }, [id, course]);
 
     // Si no se encuentra el curso, mostrar mensaje
     if (!course) {
@@ -30,11 +38,6 @@ const Product = () => {
             </PageTransition>
         );
     }
-
-    // Obtener cursos relacionados de la misma categoría
-    const relatedCourses = courses
-        .filter(c => c.category === course.category && c.id !== course.id)
-        .slice(0, 3);
 
     return (
         <PageTransition>
@@ -60,6 +63,7 @@ const Product = () => {
                             <img
                                 src={course.image || "/placeholder.svg"}
                                 alt={course.title}
+                                loading="lazy"
                                 className="w-full h-auto rounded-lg shadow-lg object-cover aspect-video"
                             />
                         </motion.div>
@@ -173,6 +177,7 @@ const Product = () => {
                                                 <img
                                                     src={relatedCourse.image || "/placeholder.svg"}
                                                     alt={relatedCourse.title}
+                                                    loading="lazy"
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>

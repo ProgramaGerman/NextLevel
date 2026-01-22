@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { CourseCard } from "./CourseCard";
 
 /**
@@ -16,8 +17,16 @@ export function CourseGrid({ title, subtitle, courses }) {
                     {subtitle && <p className="text-muted-foreground mt-2">{subtitle}</p>}
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {courses.map((course) => (
-                        <CourseCard key={course.id} course={course} />
+                    {courses.map((course, index) => (
+                        <motion.div
+                            key={course.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                        >
+                            <CourseCard course={course} />
+                        </motion.div>
                     ))}
                 </div>
             </div>

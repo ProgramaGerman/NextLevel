@@ -159,3 +159,49 @@ export const featuredCourse = {
     reviews: 260,
     image: "/graphic-design-colorful-creative-visual-communicat.jpg",
 };
+
+// ============================================
+// OPTIMIZED DATA ACCESS FUNCTIONS
+// ============================================
+
+/**
+ * Create an index for O(1) course lookup by ID
+ * This is much faster than Array.find() for repeated lookups
+ */
+const coursesById = courses.reduce((acc, course) => {
+    acc[course.id] = course;
+    return acc;
+}, {});
+
+/**
+ * Get course by ID with O(1) complexity
+ * @param {string} id - Course ID
+ * @returns {Course|undefined}
+ */
+export const getCourseById = (id) => coursesById[id];
+
+/**
+ * Get courses by category with optional limit
+ * @param {string} category - Category ID
+ * @param {number} [limit] - Optional limit of results
+ * @returns {Course[]}
+ */
+export const getCoursesByCategory = (category, limit) => {
+    const filtered = courses.filter(c => c.category === category);
+    return limit ? filtered.slice(0, limit) : filtered;
+};
+
+/**
+ * Get related courses (same category, excluding current course)
+ * @param {string} courseId - Current course ID
+ * @param {number} [limit=3] - Number of related courses to return
+ * @returns {Course[]}
+ */
+export const getRelatedCourses = (courseId, limit = 3) => {
+    const course = coursesById[courseId];
+    if (!course) return [];
+    
+    return courses
+        .filter(c => c.category === course.category && c.id !== courseId)
+        .slice(0, limit);
+};

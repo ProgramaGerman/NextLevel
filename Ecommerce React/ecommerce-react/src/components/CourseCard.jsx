@@ -15,6 +15,7 @@ export function CourseCard({ course }) {
             className="group bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-shadow h-full flex flex-col"
             whileHover={{ y: -8 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{ willChange: 'transform' }}
         >
             {/* Imagen del curso - altura fija */}
             <Link to={`/curso/${course.id}`} className="block relative aspect-video overflow-hidden flex-shrink-0">
@@ -24,6 +25,7 @@ export function CourseCard({ course }) {
                 <motion.img
                     src={course.image || "/placeholder.svg"}
                     alt={course.title}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.4 }}

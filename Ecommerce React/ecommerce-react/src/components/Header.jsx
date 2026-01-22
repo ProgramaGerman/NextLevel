@@ -1,10 +1,50 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { Search, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { categories } from "../lib/data";
 import logo from "../assets/Logo_Nuevo.svg";
+
+// Memoized Logo component - never changes
+const Logo = memo(() => (
+    <Link to="/" className="flex items-center gap-2">
+        <div className="w-48 h-20 rounded-lg flex items-center justify-center">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+        </div>
+    </Link>
+));
+Logo.displayName = 'Logo';
+
+// Memoized Desktop Navigation
+const DesktopNav = memo(() => (
+    <nav className="hidden lg:flex items-center gap-6">
+        <div className="relative group">
+            <button className="flex items-center gap-1 text-sm font-medium hover:text-primary">
+                Cursos <ChevronDown className="w-4 h-4" />
+            </button>
+            <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                <div className="bg-card border border-border rounded-lg shadow-lg p-4 min-w-64">
+                    {categories.map((cat) => (
+                        <Link
+                            key={cat.id}
+                            to={`/cursos/${cat.id}`}
+                            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted"
+                        >
+                            <span>{cat.icon}</span>
+                            <span className="text-sm">{cat.name}</span>
+                            <span className="text-xs text-muted-foreground ml-auto">{cat.count}</span>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        </div>
+        <Link to="/proyectos" className="text-sm font-medium hover:text-primary">
+            Proyectos
+        </Link>
+    </nav>
+));
+DesktopNav.displayName = 'DesktopNav';
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,39 +55,10 @@ export function Header() {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex items-center justify-evenly h-16">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2">
-                        <div className="w-48 h-20 rounded-lg flex items-center justify-center">
-                            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
-
-                        </div>
-                    </Link>
+                    <Logo />
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden lg:flex items-center gap-6">
-                        <div className="relative group">
-                            <button className="flex items-center gap-1 text-sm font-medium hover:text-primary">
-                                Cursos <ChevronDown className="w-4 h-4" />
-                            </button>
-                            <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                                <div className="bg-card border border-border rounded-lg shadow-lg p-4 min-w-64">
-                                    {categories.map((cat) => (
-                                        <Link
-                                            key={cat.id}
-                                            to={`/cursos/${cat.id}`}
-                                            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted"
-                                        >
-                                            <span>{cat.icon}</span>
-                                            <span className="text-sm">{cat.name}</span>
-                                            <span className="text-xs text-muted-foreground ml-auto">{cat.count}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <Link to="/proyectos" className="text-sm font-medium hover:text-primary">
-                            Proyectos
-                        </Link>
-                    </nav>
+                    <DesktopNav />
 
                     {/* Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-md mx-6">
