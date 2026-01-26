@@ -4,8 +4,10 @@ import { AnimatePresence } from "framer-motion";
 import { Home } from "./pages/Home";
 import "./index.css";
 
-// Lazy load Product page for better performance
+// Lazy load pages for better performance
 const Product = lazy(() => import("./pages/product"));
+const Buy = lazy(() => import("./pages/buy"));
+const Payment = lazy(() => import("./pages/Payment"));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -25,6 +27,8 @@ function AnimatedRoutes() {
           {/* Placeholder routes for future pages */}
           <Route path="/cursos/:category" element={<Home />} />
           <Route path="/curso/:id" element={<Product />} />
+          <Route path="/comprar/:id" element={<Buy />} />
+          <Route path="/pago/:id" element={<Payment />} />
           <Route path="/proyectos" element={<Home />} />
           <Route path="/producto/:id" element={<Product />} />
         </Routes>
