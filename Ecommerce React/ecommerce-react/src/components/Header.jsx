@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { useState, memo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Search, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "./ui/Button";
@@ -46,9 +46,22 @@ const DesktopNav = memo(() => (
 ));
 DesktopNav.displayName = 'DesktopNav';
 
-export function Header() {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
+export const Header = memo(function Header() {
+    // Combinar estados para optimizar y usar un solo objeto
+    const [uiState, setUiState] = useState({ menuOpen: false, searchOpen: false });
+
+    // Optimizar manejadores con useCallback
+    const toggleMenu = useCallback(() => {
+        setUiState(prev => ({ ...prev, menuOpen: !prev.menuOpen }));
+    }, []);
+
+    const toggleSearch = useCallback(() => {
+        setUiState(prev => ({ ...prev, searchOpen: !prev.searchOpen }));
+    }, []);
+
+    const closeMenu = useCallback(() => {
+        setUiState(prev => ({ ...prev, menuOpen: false }));
+    }, []);
 
     return (
         <header className="sticky top-0 z-50 bg-card border-b border-border">
@@ -70,7 +83,7 @@ export function Header() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                        <button className="md:hidden p-2 hover:bg-muted rounded-lg" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                        <button className="md:hidden p-2 hover:bg-muted rounded-lg" onClick={toggleSearch}>
                             <Search className="w-5 h-5" />
                         </button>
                         <button className="p-2 hover:bg-muted rounded-lg relative">
@@ -80,14 +93,14 @@ export function Header() {
                             </span>
                         </button>
 
-                        <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                        <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={toggleMenu}>
+                            {uiState.menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
 
                 {/* Mobile Search */}
-                {isSearchOpen && (
+                {uiState.searchOpen && (
                     <div className="md:hidden pb-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -97,7 +110,7 @@ export function Header() {
                 )}
 
                 {/* Mobile Menu */}
-                {isMenuOpen && (
+                {uiState.menuOpen && (
                     <nav className="lg:hidden pb-4 border-t border-border pt-4">
                         <div className="space-y-2">
                             <p className="text-xs font-semibold text-muted-foreground uppercase px-3">Categorías</p>
@@ -106,7 +119,7 @@ export function Header() {
                                     key={cat.id}
                                     to={`/cursos/${cat.id}`}
                                     className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted"
-                                    onClick={() => setIsMenuOpen(false)}
+                                    onClick={closeMenu}
                                 >
                                     <span>{cat.icon}</span>
                                     <span className="text-sm">{cat.name}</span>
@@ -118,4 +131,4 @@ export function Header() {
             </div>
         </header>
     );
-}
+});

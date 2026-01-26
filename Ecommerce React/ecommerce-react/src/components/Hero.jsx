@@ -32,7 +32,7 @@ export function Hero() {
               size="lg"
               className="bg-card text-card-foreground hover:bg-card/90"
             >
-              <Link to="/curso/especialidad-diseno">Ver curso</Link>
+              <Link to={`/curso/${featuredCourse.id}`}>Ver curso</Link>
             </Button>
           </div>
           <div className="relative">

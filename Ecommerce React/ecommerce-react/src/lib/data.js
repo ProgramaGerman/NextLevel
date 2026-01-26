@@ -34,8 +34,28 @@ export const categories = [
     { id: "craft", name: "Craft", icon: "🧵", count: 76 },
 ];
 
+// Featured course must be declared BEFORE the courses array
+export const featuredCourse = {
+    id: "7",
+    title: "Introducción a Adobe Photoshop",
+    instructor: "Carles Marsal",
+    description: "Aprende Adobe Photoshop desde cero y domina el mejor software de edición",
+    students: 379072,
+    rating: 100,
+    reviews: 10130,
+    price: 4.99,
+    originalPrice: 39.99,
+    category: "design",
+    badge: "Más popular",
+    image: "/photoshop-editing-digital-art-design.jpg",
+    lessons: 85,
+    hours: 12,
+    level: "Principiante"
+};
+
 /** @type {Course[]} */
 export const courses = [
+    featuredCourse, // Featured course added at the beginning
     {
         id: "1",
         title: "Dibujo para principiantes nivel -1",
@@ -149,16 +169,6 @@ export const courses = [
         badge: "Top ventas",
     },
 ];
-
-export const featuredCourse = {
-    title: "Especialización en Diseño Gráfico y Comunicación Visual",
-    description:
-        "Maestría en diseño gráfico: domina color, composición y percepción visual para crear identidades visuales impactantes.",
-    students: 18401,
-    rating: 100,
-    reviews: 260,
-    image: "/graphic-design-colorful-creative-visual-communicat.jpg",
-};
 
 // ============================================
 // OPTIMIZED DATA ACCESS FUNCTIONS

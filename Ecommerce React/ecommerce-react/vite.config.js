@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
-import path from 'path' // Import path module
+// import path from 'path' // No longer needed
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // Add alias for '@'
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   build: {
@@ -25,13 +26,7 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false, // Disable sourcemaps in production for smaller builds
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.logs in production
-        drop_debugger: true
-      }
-    }
+    minify: 'esbuild'
   },
   // Optimize dependencies
   optimizeDeps: {
