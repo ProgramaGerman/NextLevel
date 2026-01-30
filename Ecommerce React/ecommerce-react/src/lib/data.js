@@ -12,6 +12,7 @@
  * @property {number} students
  * @property {string} category
  * @property {string} [badge]
+ * @property {string} [instagramUrl] - Instagram URL of the instructor/company
  */
 
 /**
@@ -50,7 +51,8 @@ export const featuredCourse = {
     image: "/photoshop-editing-digital-art-design.jpg",
     lessons: 85,
     hours: 12,
-    level: "Principiante"
+    level: "Principiante",
+    instagramUrl: "https://instagram.com/carlesmarsal"
 };
 
 /** @type {Course[]} */
@@ -69,6 +71,7 @@ export const courses = [
         students: 271730,
         category: "illustration",
         badge: "Top ventas",
+        instagramUrl: "https://instagram.com/punoland"
     },
     {
         id: "2",
@@ -83,6 +86,7 @@ export const courses = [
         students: 227017,
         category: "illustration",
         badge: "Top ventas",
+        instagramUrl: "https://instagram.com/anavictoriacalderon"
     },
     {
         id: "3",
@@ -97,6 +101,7 @@ export const courses = [
         students: 280261,
         category: "photography",
         badge: "Top ventas",
+        instagramUrl: "https://instagram.com/minabarrio"
     },
     {
         id: "4",

@@ -4,11 +4,12 @@
 import { useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getCourseById, getRelatedCourses } from "../lib/data";
-import { Users, ThumbsUp, ShoppingCart, ArrowLeft, Star } from "lucide-react";
+import { Users, ThumbsUp, Star, Instagram } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
+import { AddToCartButton } from "../components/AddToCartButton";
 import { motion } from "framer-motion";
 import { PageTransition } from "../components/PageTransition";
 
@@ -134,12 +135,29 @@ const Product = () => {
                                     )}
                                 </div>
 
-                                <Link to={`/comprar/${course.id}`} className="w-full">
-                                    <Button className="w-full text-lg py-6 bg-primary hover:bg-primary/90">
-                                        <ShoppingCart className="w-5 h-5 mr-2" />
-                                        Comprar Ahora
+                                <AddToCartButton 
+                                    course={course}
+                                    className="w-full text-lg py-6 bg-primary hover:bg-primary/90"
+                                />
+
+                                <Link to="/carrito">
+                                    <Button variant="outline" className="w-full">
+                                        Ver Carrito
                                     </Button>
                                 </Link>
+
+                                {/* Instagram Link */}
+                                {course.instagramUrl && (
+                                    <a 
+                                        href={course.instagramUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+                                    >
+                                        <Instagram className="w-5 h-5" />
+                                        <span className="font-semibold">Seguir en Instagram</span>
+                                    </a>
+                                )}
 
                                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                                     <h3 className="font-semibold">Lo que aprenderás:</h3>

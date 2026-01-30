@@ -4,6 +4,7 @@ import { Search, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { categories } from "../lib/data";
+import { CartIcon } from "./CartIcon";
 import logo from "../assets/Logo_Nuevo.svg";
 
 // Memoized Logo component - never changes
@@ -86,12 +87,7 @@ export const Header = memo(function Header() {
                         <button className="md:hidden p-2 hover:bg-muted rounded-lg" onClick={toggleSearch}>
                             <Search className="w-5 h-5" />
                         </button>
-                        <button className="p-2 hover:bg-muted rounded-lg relative">
-                            <ShoppingCart className="w-5 h-5" />
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                                0
-                            </span>
-                        </button>
+                        <CartIcon />
 
                         <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={toggleMenu}>
                             {uiState.menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

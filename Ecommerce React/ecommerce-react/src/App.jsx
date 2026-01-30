@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { CartProvider } from "./context/CartContext";
 import { Home } from "./pages/Home";
 import "./index.css";
 
@@ -8,6 +9,8 @@ import "./index.css";
 const Product = lazy(() => import("./pages/product"));
 const Buy = lazy(() => import("./pages/buy"));
 const Payment = lazy(() => import("./pages/Payment"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Invoice = lazy(() => import("./pages/Invoice"));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -29,6 +32,8 @@ function AnimatedRoutes() {
           <Route path="/curso/:id" element={<Product />} />
           <Route path="/comprar/:id" element={<Buy />} />
           <Route path="/pago/:id" element={<Payment />} />
+          <Route path="/carrito" element={<Cart />} />
+          <Route path="/factura/:id" element={<Invoice />} />
           <Route path="/proyectos" element={<Home />} />
           <Route path="/producto/:id" element={<Product />} />
         </Routes>
@@ -39,9 +44,11 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AnimatedRoutes />
-    </BrowserRouter>
+    <CartProvider>
+      <BrowserRouter>
+        <AnimatedRoutes />
+      </BrowserRouter>
+    </CartProvider>
   );
 }
 

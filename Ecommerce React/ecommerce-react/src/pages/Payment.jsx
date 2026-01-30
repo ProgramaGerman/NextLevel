@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getCourseById } from '../lib/data'
-import { agregarPago } from '../lib/pago'
+import { generateInvoice, saveInvoice } from '../lib/invoice'
+import { useCart } from '../context/CartContext'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { Button } from '../components/ui/Button'
@@ -22,7 +23,15 @@ const Payment = () => {
     const { id } = useParams()
     const navigate = useNavigate()
     const location = useLocation()
-    const course = getCourseById(id)
+    const { clearCart } = useCart()
+    
+    // Check if it's a cart purchase or single item
+    const isCartPurchase = id === 'carrito'
+    const cartItems = location.state?.cartItems || []
+    const totalAmount = location.state?.totalAmount || '0.00'
+    
+    // For single course purchases (legacy)
+    const course = !isCartPurchase ? getCourseById(id) : null
     const selectedPlan = location.state?.plan
     const planData = location.state?.planData
 
@@ -66,12 +75,15 @@ const Payment = () => {
         window.scrollTo(0, 0)
     }, [])
 
-    // Redirigir si no hay plan seleccionado
+    // Redirect if no items to purchase
     useEffect(() => {
-        if (!selectedPlan || !planData) {
+        if (isCartPurchase && cartItems.length === 0) {
+            navigate('/carrito')
+        }
+        if (!isCartPurchase && (!selectedPlan || !planData)) {
             navigate(`/comprar/${id}`)
         }
-    }, [selectedPlan, planData, id, navigate])
+    }, [isCartPurchase, cartItems, selectedPlan, planData, id, navigate])
 
     const bancos = [
         'Banesco',
@@ -149,25 +161,41 @@ const Payment = () => {
 
         // Simular procesamiento
         setTimeout(() => {
-            const nuevoPago = {
-                curso: course.title,
-                cursoId: course.id,
-                plan: planData.name,
-                monto: parseFloat(planData.price),
-                metodoPago: metodoSeleccionado,
-                detalles: metodoSeleccionado === 'pago-movil' ? pagoMovil : 
-                          metodoSeleccionado === 'visa' ? visa : 
-                          metodoSeleccionado === 'transferencia' ? transferencia : paypal
+            // Generate invoice
+            const purchasedItems = isCartPurchase ? cartItems : [{
+                ...course,
+                plan: planData
+            }]
+            
+            const paymentDetails = {
+                method: metodoSeleccionado,
+                details: metodoSeleccionado === 'pago-movil' ? pagoMovil : 
+                        metodoSeleccionado === 'visa' ? visa : 
+                        metodoSeleccionado === 'transferencia' ? transferencia : paypal,
+                reference: metodoSeleccionado === 'pago-movil' || metodoSeleccionado === 'transferencia' 
+                    ? (metodoSeleccionado === 'pago-movil' ? pagoMovil.referencia : transferencia.referencia)
+                    : 'N/A'
             }
-
-            agregarPago(nuevoPago)
+            
+            const customerInfo = {
+                name: metodoSeleccionado === 'paypal' ? paypal.nombreCompleto : 'Cliente',
+                email: metodoSeleccionado === 'paypal' ? paypal.email : '',
+                identification: metodoSeleccionado === 'pago-movil' ? pagoMovil.cedula : 
+                               metodoSeleccionado === 'transferencia' ? transferencia.cedula : ''
+            }
+            
+            const invoice = generateInvoice(purchasedItems, paymentDetails, customerInfo)
+            saveInvoice(invoice)
+            
+            // Clear cart if it was a cart purchase
+            if (isCartPurchase) {
+                clearCart()
+            }
+            
             setProcesando(false)
-            setMostrarExito(true)
-
-            // Redirigir a home después de 3 segundos
-            setTimeout(() => {
-                navigate('/')
-            }, 3000)
+            
+            // Navigate to invoice page
+            navigate(`/factura/${invoice.id}`)
         }, 2000)
     }
 
@@ -209,9 +237,12 @@ const Payment = () => {
         return grupos ? grupos.join(' ') : solo_numeros
     }
 
-    if (!course || !planData) {
+    if ((!isCartPurchase && (!course || !planData)) || (isCartPurchase && cartItems.length === 0)) {
         return null
     }
+    
+    // Calculate total for display
+    const displayTotal = isCartPurchase ? totalAmount : planData?.price
 
     return (
         <PageTransition>
@@ -650,45 +681,68 @@ const Payment = () => {
                                 <div className="bg-card border border-border rounded-2xl p-6 shadow-lg sticky top-24">
                                     <h3 className="text-xl font-bold mb-4">Resumen del Pedido</h3>
                                     
-                                    <div className="space-y-4">
-                                        <div>
-                                            <img
-                                                src={course.image}
-                                                alt={course.title}
-                                                className="w-full h-32 object-cover rounded-lg mb-3"
-                                            />
-                                            <h4 className="font-semibold">{course.title}</h4>
-                                            <p className="text-sm text-muted-foreground">Por {course.instructor}</p>
+                                    {isCartPurchase ? (
+                                        // Display cart items
+                                        <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
+                                            {cartItems.map((item, index) => (
+                                                <div key={index} className="flex gap-3 pb-3 border-b border-border last:border-0">
+                                                    <img
+                                                        src={item.image || '/placeholder.svg'}
+                                                        alt={item.title}
+                                                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-semibold text-sm line-clamp-2 mb-1">{item.title}</h4>
+                                                        <p className="text-xs text-muted-foreground mb-1">Plan {item.plan?.name || 'Básico'}</p>
+                                                        <p className="text-sm font-bold text-primary">
+                                                            ${item.plan?.price || item.price}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
+                                    ) : (
+                                        // Display single course
+                                        <div className="space-y-4">
+                                            <div>
+                                                <img
+                                                    src={course.image}
+                                                    alt={course.title}
+                                                    className="w-full h-32 object-cover rounded-lg mb-3"
+                                                />
+                                                <h4 className="font-semibold">{course.title}</h4>
+                                                <p className="text-sm text-muted-foreground">Por {course.instructor}</p>
+                                            </div>
 
-                                        <div className="border-t border-border pt-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm text-muted-foreground">Plan</span>
-                                                <span className="font-semibold">{planData.name}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm text-muted-foreground">Duración</span>
-                                                <span className="text-sm">{planData.duration}</span>
+                                            <div className="border-t border-border pt-4">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-sm text-muted-foreground">Plan</span>
+                                                    <span className="font-semibold">{planData.name}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-sm text-muted-foreground">Duración</span>
+                                                    <span className="text-sm">{planData.duration}</span>
+                                                </div>
                                             </div>
                                         </div>
+                                    )}
 
-                                        <div className="border-t border-border pt-4">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-muted-foreground">Subtotal</span>
-                                                <span>${planData.price}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-lg font-bold">
-                                                <span>Total</span>
-                                                <span className="text-primary">${planData.price}</span>
-                                            </div>
+                                    <div className="border-t border-border pt-4 mt-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-muted-foreground">Subtotal</span>
+                                            <span>${displayTotal}</span>
                                         </div>
+                                        <div className="flex items-center justify-between text-lg font-bold">
+                                            <span>Total</span>
+                                            <span className="text-primary">${displayTotal}</span>
+                                        </div>
+                                    </div>
 
-                                        <div className="bg-primary/10 rounded-lg p-3 flex items-start gap-2">
-                                            <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                                            <p className="text-xs text-muted-foreground">
-                                                Tus datos están protegidos con encriptación de nivel bancario
-                                            </p>
-                                        </div>
+                                    <div className="bg-primary/10 rounded-lg p-3 flex items-start gap-2 mt-4">
+                                        <ShieldCheck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-muted-foreground">
+                                            Tus datos están protegidos con encriptación de nivel bancario
+                                        </p>
                                     </div>
                                 </div>
                             </motion.div>
