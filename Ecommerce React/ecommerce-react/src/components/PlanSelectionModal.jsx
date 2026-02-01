@@ -9,7 +9,7 @@ const plans = [
         id: 'basic',
         name: 'Básico Learner',
         duration: 'Ilimitado',
-        priceMultiplier: 1,
+        priceMultiplier: 0,
         features: ['Acceso al curso completo', 'Acceso a 50 curso basicos', 'Contenido limitado', 'Cursos escritos', 'Comunidad de estudiantes'],
         color: 'from-blue-500 to-blue-600'
     },
