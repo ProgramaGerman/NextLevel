@@ -17,7 +17,7 @@ export function Home() {
                     courses={courses.slice(0, 4)}
                 />
                 <Categories />
-                <CourseGrid title="Cursos más populares" courses={courses.slice(4, 8)} />
+                <CourseGrid title="Cursos más utilizacos de la plataforma" courses={courses.slice(4, 8)} />
             </main>
             <Footer />
         </div>
