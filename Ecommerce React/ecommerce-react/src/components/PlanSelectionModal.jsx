@@ -7,27 +7,27 @@ import { motion, AnimatePresence } from 'framer-motion'
 const plans = [
     {
         id: 'basic',
-        name: 'Básico',
-        duration: '3 meses de acceso',
+        name: 'Básico Learner',
+        duration: 'Ilimitado',
         priceMultiplier: 1,
-        features: ['Acceso al curso completo', 'Certificado de finalización', 'Soporte por correo'],
+        features: ['Acceso al curso completo', 'Acceso a 50 curso basicos', 'Contenido limitado', 'Cursos escritos', 'Comunidad de estudiantes'],
         color: 'from-blue-500 to-blue-600'
     },
     {
         id: 'standard',
-        name: 'Estándar',
-        duration: '6 meses de acceso',
+        name: 'Medium Academy',
+        duration: 'Mensual',
         priceMultiplier: 1.5,
-        features: ['Todo lo del plan Básico', 'Acceso a recursos adicionales', 'Actualizaciones del curso', 'Soporte prioritario'],
+        features: ['Acceso a 100+ cursos', 'Acceso a todas las Especialuzaciones', 'Proyectos guiados y practicas', 'Evaluaciones para comprobar tu aprendizaje'],
         color: 'from-purple-500 to-purple-600',
         popular: true
     },
     {
         id: 'premium',
-        name: 'Premium',
-        duration: 'Acceso de por vida',
+        name: 'Pro Education',
+        duration: 'Mensual',
         priceMultiplier: 2,
-        features: ['Todo lo del plan Estándar', 'Acceso de por vida', 'Mentoría personalizada', 'Proyectos exclusivos', 'Grupo VIP'],
+        features: ['Clases en vivo', 'Evaluaciones personalizadas', 'Ejercicios precticos avanzados', 'Certificados Profesionales', 'Soporte dedicado 24/7', 'Contenido y rutas de aprendizaje exclusivas'],
         color: 'from-orange-500 to-red-600'
     }
 ]
