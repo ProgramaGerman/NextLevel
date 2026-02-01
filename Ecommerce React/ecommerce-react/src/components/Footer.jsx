@@ -29,8 +29,8 @@ export function Footer() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                                <span className="text-primary-foreground font-bold text-sm">NLA</span>
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                                <img src="src/assets/logo_Nuevo.svg" alt="" />
                             </div>
                             <span className="font-bold">NextLevelAcademy</span>
                         </div>

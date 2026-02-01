@@ -12,6 +12,7 @@
  * @property {number} students
  * @property {string} category
  * @property {string} [badge]
+ * @property {string} [instagramUrl] - Instagram URL of the instructor/company
  */
 
 /**
@@ -34,8 +35,29 @@ export const categories = [
     { id: "craft", name: "Craft", icon: "🧵", count: 76 },
 ];
 
+// Featured course must be declared BEFORE the courses array
+export const featuredCourse = {
+    id: "7",
+    title: "Introducción a Adobe Photoshop",
+    instructor: "Carles Marsal",
+    description: "Aprende Adobe Photoshop desde cero y domina el mejor software de edición",
+    students: 379072,
+    rating: 100,
+    reviews: 10130,
+    price: 4.99,
+    originalPrice: 39.99,
+    category: "design",
+    badge: "Más popular",
+    image: "/photoshop-editing-digital-art-design.jpg",
+    lessons: 85,
+    hours: 12,
+    level: "Principiante",
+    instagramUrl: "https://instagram.com/carlesmarsal"
+};
+
 /** @type {Course[]} */
 export const courses = [
+    featuredCourse, // Featured course added at the beginning
     {
         id: "1",
         title: "Dibujo para principiantes nivel -1",
@@ -49,6 +71,7 @@ export const courses = [
         students: 271730,
         category: "illustration",
         badge: "Top ventas",
+        instagramUrl: "https://instagram.com/punoland"
     },
     {
         id: "2",
@@ -63,6 +86,7 @@ export const courses = [
         students: 227017,
         category: "illustration",
         badge: "Top ventas",
+        instagramUrl: "https://instagram.com/anavictoriacalderon"
     },
     {
         id: "3",
@@ -77,6 +101,7 @@ export const courses = [
         students: 280261,
         category: "photography",
         badge: "Top ventas",
+        instagramUrl: "https://instagram.com/minabarrio"
     },
     {
         id: "4",
@@ -150,12 +175,48 @@ export const courses = [
     },
 ];
 
-export const featuredCourse = {
-    title: "Especialización en Diseño Gráfico y Comunicación Visual",
-    description:
-        "Maestría en diseño gráfico: domina color, composición y percepción visual para crear identidades visuales impactantes.",
-    students: 18401,
-    rating: 100,
-    reviews: 260,
-    image: "/graphic-design-colorful-creative-visual-communicat.jpg",
+// ============================================
+// OPTIMIZED DATA ACCESS FUNCTIONS
+// ============================================
+
+/**
+ * Create an index for O(1) course lookup by ID
+ * This is much faster than Array.find() for repeated lookups
+ */
+const coursesById = courses.reduce((acc, course) => {
+    acc[course.id] = course;
+    return acc;
+}, {});
+
+/**
+ * Get course by ID with O(1) complexity
+ * @param {string} id - Course ID
+ * @returns {Course|undefined}
+ */
+export const getCourseById = (id) => coursesById[id];
+
+/**
+ * Get courses by category with optional limit
+ * @param {string} category - Category ID
+ * @param {number} [limit] - Optional limit of results
+ * @returns {Course[]}
+ */
+export const getCoursesByCategory = (category, limit) => {
+    const filtered = courses.filter(c => c.category === category);
+    return limit ? filtered.slice(0, limit) : filtered;
+};
+
+/**
+ * Get related courses (same category, excluding current course)
+ * @param {string} courseId - Current course ID
+ * @param {number} [limit=3] - Number of related courses to return
+ * @returns {Course[]}
+ */
+export const getRelatedCourses = (courseId, limit = 3) => {
+    const course = coursesById[courseId];
+    if (!course) return [];
+    
+    return courses
+        .filter(c => c.category === course.category && c.id !== courseId)
+        .slice(0, limit);
 };
