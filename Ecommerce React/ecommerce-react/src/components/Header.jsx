@@ -6,6 +6,7 @@ import { Input } from "./ui/Input";
 import { categories } from "../lib/data";
 import { CartIcon } from "./CartIcon";
 import { useAuth } from "../context/AuthContext";
+import { useSearch } from "../context/SearchContext";
 import logo from "../assets/Logo_Nuevo.svg";
 
 // Memoized Logo component - never changes
@@ -133,6 +134,7 @@ UserMenu.displayName = 'UserMenu';
 
 export const Header = memo(function Header() {
     const { isAuthenticated, currentUser, logout } = useAuth();
+    const { searchQuery, setSearchQuery } = useSearch();
     const navigate = useNavigate();
     const [uiState, setUiState] = useState({ menuOpen: false, searchOpen: false });
 
@@ -162,7 +164,13 @@ export const Header = memo(function Header() {
                     <div className="hidden md:flex flex-1 max-w-md mx-6">
                         <div className="relative w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input type="search" placeholder="Buscar cursos..." className="pl-10 bg-muted border-0" />
+                            <Input 
+                                type="search" 
+                                placeholder="Buscar cursos..." 
+                                className="pl-10 bg-muted border-0"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
                     </div>
 
@@ -205,7 +213,13 @@ export const Header = memo(function Header() {
                     <div className="md:hidden pb-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input type="search" placeholder="Buscar cursos..." className="pl-10 bg-muted border-0" />
+                            <Input 
+                                type="search" 
+                                placeholder="Buscar cursos..." 
+                                className="pl-10 bg-muted border-0"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
                     </div>
                 )}

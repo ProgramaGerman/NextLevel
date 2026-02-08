@@ -6,6 +6,7 @@ import { DataProvider } from "./context/DataContext";
 import { AuthProvider } from "./context/AuthContext";
 import { EnrollmentProvider } from "./context/EnrollmentContext";
 import { ReviewProvider } from "./context/ReviewContext";
+import { SearchProvider } from "./context/SearchContext";
 import { Home } from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
@@ -78,9 +79,11 @@ function App() {
         <EnrollmentProvider>
           <ReviewProvider>
             <CartProvider>
-              <BrowserRouter>
-                <AnimatedRoutes />
-              </BrowserRouter>
+              <SearchProvider>
+                <BrowserRouter>
+                  <AnimatedRoutes />
+                </BrowserRouter>
+              </SearchProvider>
             </CartProvider>
           </ReviewProvider>
         </EnrollmentProvider>
