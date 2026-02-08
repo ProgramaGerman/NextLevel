@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getCourseById } from '../lib/data'
 import { generateInvoice, saveInvoice } from '../lib/invoice'
 import { useCart } from '../context/CartContext'
+import { useEnrollment } from '../context/EnrollmentContext'
+import { useAuth } from '../context/AuthContext'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { Button } from '../components/ui/Button'
@@ -19,11 +21,14 @@ import {
     Wallet
 } from 'lucide-react'
 
+
 const Payment = () => {
     const { id } = useParams()
     const navigate = useNavigate()
     const location = useLocation()
     const { clearCart } = useCart()
+    const { enroll } = useEnrollment()
+    const { isAuthenticated, currentUser } = useAuth()
     
     // Check if it's a cart purchase or single item
     const isCartPurchase = id === 'carrito'
@@ -161,41 +166,56 @@ const Payment = () => {
 
         // Simular procesamiento
         setTimeout(() => {
-            // Generate invoice
-            const purchasedItems = isCartPurchase ? cartItems : [{
-                ...course,
-                plan: planData
-            }]
-            
-            const paymentDetails = {
-                method: metodoSeleccionado,
-                details: metodoSeleccionado === 'pago-movil' ? pagoMovil : 
-                        metodoSeleccionado === 'visa' ? visa : 
-                        metodoSeleccionado === 'transferencia' ? transferencia : paypal,
-                reference: metodoSeleccionado === 'pago-movil' || metodoSeleccionado === 'transferencia' 
-                    ? (metodoSeleccionado === 'pago-movil' ? pagoMovil.referencia : transferencia.referencia)
-                    : 'N/A'
+            try {
+                // Generate invoice
+                const purchasedItems = isCartPurchase ? cartItems : [{
+                    ...course,
+                    plan: planData
+                }]
+                
+                const paymentDetails = {
+                    method: metodoSeleccionado,
+                    details: metodoSeleccionado === 'pago-movil' ? pagoMovil : 
+                            metodoSeleccionado === 'visa' ? visa : 
+                            metodoSeleccionado === 'transferencia' ? transferencia : paypal,
+                    reference: metodoSeleccionado === 'pago-movil' || metodoSeleccionado === 'transferencia' 
+                        ? (metodoSeleccionado === 'pago-movil' ? pagoMovil.referencia : transferencia.referencia)
+                        : 'N/A'
+                }
+                
+                const customerInfo = {
+                    name: currentUser ? `${currentUser.name} ${currentUser.lastname}` : 
+                          (metodoSeleccionado === 'paypal' ? paypal.nombreCompleto : 'Cliente'),
+                    email: metodoSeleccionado === 'paypal' ? paypal.email : '',
+                    identification: currentUser ? currentUser.cedula : 
+                                   (metodoSeleccionado === 'pago-movil' ? pagoMovil.cedula : 
+                                    metodoSeleccionado === 'transferencia' ? transferencia.cedula : '')
+                }
+                
+                const invoice = generateInvoice(purchasedItems, paymentDetails, customerInfo)
+                saveInvoice(invoice)
+                
+                // Create enrollments for each purchased course (if user is authenticated)
+                if (isAuthenticated && currentUser) {
+                    purchasedItems.forEach(item => {
+                        enroll(item.id, item.title, item.category || 'otros')
+                    })
+                }
+                
+                // Clear cart if it was a cart purchase
+                if (isCartPurchase) {
+                    clearCart()
+                }
+                
+                setProcesando(false)
+                
+                // Navigate to invoice page
+                navigate(`/factura/${invoice.id}`)
+            } catch (error) {
+                console.error('Error procesando pago:', error)
+                setProcesando(false)
+                alert('Hubo un error procesando el pago. Por favor, intenta nuevamente.')
             }
-            
-            const customerInfo = {
-                name: metodoSeleccionado === 'paypal' ? paypal.nombreCompleto : 'Cliente',
-                email: metodoSeleccionado === 'paypal' ? paypal.email : '',
-                identification: metodoSeleccionado === 'pago-movil' ? pagoMovil.cedula : 
-                               metodoSeleccionado === 'transferencia' ? transferencia.cedula : ''
-            }
-            
-            const invoice = generateInvoice(purchasedItems, paymentDetails, customerInfo)
-            saveInvoice(invoice)
-            
-            // Clear cart if it was a cart purchase
-            if (isCartPurchase) {
-                clearCart()
-            }
-            
-            setProcesando(false)
-            
-            // Navigate to invoice page
-            navigate(`/factura/${invoice.id}`)
         }, 2000)
     }
 

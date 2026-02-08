@@ -1,10 +1,11 @@
 import { useState, memo, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { Search, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, ShoppingCart, Menu, X, ChevronDown, User, LogOut, LayoutDashboard, Receipt } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { categories } from "../lib/data";
 import { CartIcon } from "./CartIcon";
+import { useAuth } from "../context/AuthContext";
 import logo from "../assets/Logo_Nuevo.svg";
 
 // Memoized Logo component - never changes
@@ -47,11 +48,94 @@ const DesktopNav = memo(() => (
 ));
 DesktopNav.displayName = 'DesktopNav';
 
+// User Menu Component
+const UserMenu = memo(({ user, onLogout }) => {
+    const navigate = useNavigate();
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleDashboard = () => {
+        navigate('/dashboard');
+        setIsOpen(false);
+    };
+
+    const handleProfile = () => {
+        navigate('/perfil');
+        setIsOpen(false);
+    };
+
+    const handleLogout = () => {
+        onLogout();
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="relative">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition"
+            >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                    <span className="text-sm font-bold text-primary-foreground">
+                        {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                </div>
+                <span className="hidden sm:block text-sm font-medium">{user.name || 'Usuario'}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-lg shadow-lg py-2 z-20">
+                        <div className="px-4 py-3 border-b border-border">
+                            <p className="text-sm font-semibold">{user.name} {user.lastname}</p>
+                            <p className="text-xs text-muted-foreground">{user.cedula}</p>
+                        </div>
+                        <button
+                            onClick={handleDashboard}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-muted transition"
+                        >
+                            <LayoutDashboard className="w-4 h-4" />
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={handleProfile}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-muted transition"
+                        >
+                            <User className="w-4 h-4" />
+                            Mi Perfil
+                        </button>
+                        <button
+                            onClick={() => {
+                                navigate('/pagos')
+                                setIsOpen(false)
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-muted transition"
+                        >
+                            <Receipt className="w-4 h-4" />
+                            Historial de Pagos
+                        </button>
+                        <div className="border-t border-border my-2" />
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+});
+UserMenu.displayName = 'UserMenu';
+
 export const Header = memo(function Header() {
-    // Combinar estados para optimizar y usar un solo objeto
+    const { isAuthenticated, currentUser, logout } = useAuth();
+    const navigate = useNavigate();
     const [uiState, setUiState] = useState({ menuOpen: false, searchOpen: false });
 
-    // Optimizar manejadores con useCallback
     const toggleMenu = useCallback(() => {
         setUiState(prev => ({ ...prev, menuOpen: !prev.menuOpen }));
     }, []);
@@ -89,6 +173,27 @@ export const Header = memo(function Header() {
                         </button>
                         <CartIcon />
 
+                        {/* Auth Buttons or User Menu */}
+                        {isAuthenticated ? (
+                            <UserMenu user={currentUser} onLogout={logout} />
+                        ) : (
+                            <div className="hidden sm:flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate('/login')}
+                                >
+                                    Iniciar Sesión
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={() => navigate('/register')}
+                                >
+                                    Registrarse
+                                </Button>
+                            </div>
+                        )}
+
                         <button className="lg:hidden p-2 hover:bg-muted rounded-lg" onClick={toggleMenu}>
                             {uiState.menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
@@ -109,6 +214,31 @@ export const Header = memo(function Header() {
                 {uiState.menuOpen && (
                     <nav className="lg:hidden pb-4 border-t border-border pt-4">
                         <div className="space-y-2">
+                            {/* Auth buttons mobile */}
+                            {!isAuthenticated && (
+                                <div className="sm:hidden flex flex-col gap-2 px-3 pb-4 border-b border-border">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            navigate('/login');
+                                            closeMenu();
+                                        }}
+                                    >
+                                        Iniciar Sesión
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            navigate('/register');
+                                            closeMenu();
+                                        }}
+                                    >
+                                        Registrarse
+                                    </Button>
+                                </div>
+                            )}
+                            
                             <p className="text-xs font-semibold text-muted-foreground uppercase px-3">Categorías</p>
                             {categories.map((cat) => (
                                 <Link

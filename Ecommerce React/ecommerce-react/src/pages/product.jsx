@@ -10,6 +10,8 @@ import { Badge } from "../components/ui/Badge";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { AddToCartButton } from "../components/AddToCartButton";
+import { ReviewForm } from "../components/ReviewForm";
+import { ReviewList } from "../components/ReviewList";
 import { motion } from "framer-motion";
 import { PageTransition } from "../components/PageTransition";
 
@@ -229,6 +231,22 @@ const Product = () => {
                             </div>
                         </motion.div>
                     )}
+                </div>
+
+                {/* Reviews Section */}
+                <div className="max-w-7xl mx-auto px-4 py-12">
+                    <h2 className="text-3xl font-bold mb-8">Reseñas del Curso</h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Review Form */}
+                        <div>
+                            <ReviewForm courseId={course.id} />
+                        </div>
+
+                        {/* Reviews List */}
+                        <div>
+                            <ReviewList courseId={course.id} />
+                        </div>
+                    </div>
                 </div>
 
                 <Footer />

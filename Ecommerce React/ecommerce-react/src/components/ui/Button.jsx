@@ -41,7 +41,8 @@ const buttonVariants = cva(
  * @param {'default'|'sm'|'lg'|'icon'|'icon-sm'|'icon-lg'} [props.size]
  * @param {React.ReactNode} props.children
  */
-export function Button({ className, variant, size, ...props }) {
+export function Button({ className, variant, size, asChild, ...props }) {
+    // Filter out asChild prop to avoid React warning
     return (
         <button
             data-slot="button"
