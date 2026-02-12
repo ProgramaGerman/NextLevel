@@ -21,7 +21,7 @@ export const CourseCard = memo(function CourseCard({ course }) {
 
     return (
         <motion.article
-            className="group bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-shadow h-full flex flex-col"
+            className="group bg-card rounded-lg overflow-hidden border border-border hover:shadow-xl hover:border-primary/50 transition-all h-full flex flex-col cursor-pointer"
             whileHover={{ y: -8 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             style={{ willChange: 'transform' }}

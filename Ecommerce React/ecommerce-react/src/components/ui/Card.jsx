@@ -1,10 +1,12 @@
 import React from 'react'
 
-const Card = React.forwardRef(({ className = '', children, ...props }, ref) => {
+const Card = React.forwardRef(({ className = '', clickable = false, children, ...props }, ref) => {
   return (
     <div
       ref={ref}
-      className={`rounded-lg border border-border bg-card text-card-foreground shadow-sm ${className}`}
+      className={`rounded-lg border border-border bg-card text-card-foreground shadow-sm ${
+        clickable ? 'cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all' : ''
+      } ${className}`}
       {...props}
     >
       {children}

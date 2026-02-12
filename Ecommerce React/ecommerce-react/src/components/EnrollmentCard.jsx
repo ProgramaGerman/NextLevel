@@ -40,11 +40,11 @@ const EnrollmentCard = ({ enrollment, course }) => {
 
   return (
     <motion.div
-      className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow"
+      className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -4, scale: 1.02 }}
     >
       {/* Course Image */}
       <div className="relative h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
