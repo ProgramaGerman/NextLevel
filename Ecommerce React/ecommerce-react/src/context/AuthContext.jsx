@@ -109,7 +109,11 @@ export const AuthProvider = ({ children }) => {
     return userWithoutHash
   }
 
-  const logout = () => setCurrentUser(null)
+  const logout = () => {
+    setCurrentUser(null)
+    localStorage.removeItem('nextlevel_cart')
+  }
+
 
   const value = {
     currentUser,

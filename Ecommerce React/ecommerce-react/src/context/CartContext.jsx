@@ -13,9 +13,14 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
     const CART_STORAGE_KEY = 'nextlevel_cart'
     
-    // Inicializar el carrito desde localStorage
+    // Inicializar el carrito desde localStorage solo si hay sesión activa
     const [cart, setCart] = useState(() => {
         try {
+            const savedUser = localStorage.getItem('current_user')
+            if (!savedUser) {
+                localStorage.removeItem(CART_STORAGE_KEY)
+                return []
+            }
             const savedCart = localStorage.getItem(CART_STORAGE_KEY)
             return savedCart ? JSON.parse(savedCart) : []
         } catch (error) {
@@ -23,6 +28,7 @@ export const CartProvider = ({ children }) => {
             return []
         }
     })
+
 
     // Guardar el carrito en localStorage cada vez que cambie
     useEffect(() => {

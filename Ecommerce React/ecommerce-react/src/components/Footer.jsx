@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import logoSvg from "../assets/Logo_Nuevo.svg";
+
 
 const footerLinks = {
     cursos: [
@@ -30,7 +32,8 @@ export function Footer() {
                     <div>
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                                <img src="src/assets/logo_Nuevo.svg" alt="" />
+                                <img src={logoSvg} alt="NextLevel Logo" />
+
                             </div>
                             <span className="font-bold">NextLevelAcademy</span>
                         </div>
