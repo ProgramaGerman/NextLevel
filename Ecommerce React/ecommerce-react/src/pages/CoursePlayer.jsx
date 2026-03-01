@@ -25,12 +25,16 @@ const CoursePlayer = () => {
   const navigate = useNavigate()
   const { currentUser } = useAuth()
   const { getMyEnrollment, hasAccess, updateProgress } = useEnrollment()
-  
-  const course = getCourseById(id)
-  const enrollment = getMyEnrollment(id)
+
+  const [course, setCourse] = useState(null)
   const [currentLesson, setCurrentLesson] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [videoProgress, setVideoProgress] = useState(0)
+
+  useEffect(() => {
+    getCourseById(id).then(setCourse)
+  }, [id])
+
+  const enrollment = getMyEnrollment(id)
 
   // Redirect if no access
   useEffect(() => {
@@ -142,7 +146,7 @@ const CoursePlayer = () => {
                     <Button
                       onClick={handleLessonComplete}
                       className="w-full sm:w-auto"
-                      disabled={!isPlaying && videoProgress < 80}
+                      disabled={!isPlaying}
                     >
                       {currentLesson === lessons.length - 1 ? (
                         <>

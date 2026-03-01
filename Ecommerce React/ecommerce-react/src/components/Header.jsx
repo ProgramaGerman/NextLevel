@@ -1,9 +1,9 @@
-import { useState, memo, useCallback } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Menu, X, ChevronDown, User, LogOut, LayoutDashboard, Receipt } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
-import { categories } from "../lib/data";
+import { getCategories } from "../lib/data";
 import { CartIcon } from "./CartIcon";
 import { useAuth } from "../context/AuthContext";
 import { useSearch } from "../context/SearchContext";
@@ -20,7 +20,7 @@ const Logo = memo(() => (
 Logo.displayName = 'Logo';
 
 // Memoized Desktop Navigation
-const DesktopNav = memo(() => (
+const DesktopNav = memo(({ categories }) => (
     <nav className="hidden lg:flex items-center gap-6">
         <div className="relative group">
             <button className="flex items-center gap-1 text-sm font-medium hover:text-primary">
@@ -137,6 +137,11 @@ export const Header = memo(function Header() {
     const { searchQuery, setSearchQuery } = useSearch();
     const navigate = useNavigate();
     const [uiState, setUiState] = useState({ menuOpen: false, searchOpen: false });
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        getCategories().then(setCategories);
+    }, []);
 
     const toggleMenu = useCallback(() => {
         setUiState(prev => ({ ...prev, menuOpen: !prev.menuOpen }));
@@ -158,7 +163,7 @@ export const Header = memo(function Header() {
                     <Logo />
 
                     {/* Desktop Navigation */}
-                    <DesktopNav />
+                    <DesktopNav categories={categories} />
 
                     {/* Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-md mx-6">

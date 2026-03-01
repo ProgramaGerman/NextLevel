@@ -15,8 +15,10 @@ const Quiz = () => {
   const navigate = useNavigate()
   const { currentUser } = useAuth()
   const { getMyEnrollment, hasAccess } = useEnrollment()
-  
-  const course = getCourseById(id)
+
+  const [course, setCourse] = useState(null)
+  useEffect(() => { getCourseById(id).then(setCourse) }, [id])
+
   const enrollment = getMyEnrollment(id)
   
   const [currentQuestion, setCurrentQuestion] = useState(0)

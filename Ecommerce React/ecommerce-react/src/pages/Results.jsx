@@ -17,8 +17,10 @@ const Results = () => {
   const location = useLocation()
   const { currentUser } = useAuth()
   const { completeCourse, getMyEnrollment } = useEnrollment()
-  
-  const course = getCourseById(id)
+
+  const [course, setCourse] = useState(null)
+  useEffect(() => { getCourseById(id).then(setCourse) }, [id])
+
   const enrollment = getMyEnrollment(id)
   const { score, timeUsed, totalQuestions, answeredQuestions } = location.state || {}
 

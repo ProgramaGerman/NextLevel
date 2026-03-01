@@ -1,20 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { useData } from './DataContext'
+import { supabase } from '../env/KeySupabase'
 
 const AuthContext = createContext(null)
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth debe usarse dentro de AuthProvider')
-  }
+  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider')
   return context
+}
+
+/** Hash simple con Web Crypto API (SHA-256) — no requiere librerías externas */
+async function hashPassword(password) {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { createUser, getUserByCedula } = useData()
 
   // Cargar sesión guardada al iniciar
   useEffect(() => {
@@ -22,15 +28,14 @@ export const AuthProvider = ({ children }) => {
     if (savedUser) {
       try {
         setCurrentUser(JSON.parse(savedUser))
-      } catch (error) {
-        console.error('Error al cargar sesión:', error)
+      } catch {
         localStorage.removeItem('current_user')
       }
     }
     setIsLoading(false)
   }, [])
 
-  // Guardar sesión cuando cambia el usuario
+  // Persistir sesión
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('current_user', JSON.stringify(currentUser))
@@ -40,59 +45,71 @@ export const AuthProvider = ({ children }) => {
   }, [currentUser])
 
   const register = async ({ name, lastname, cedula, password, confirmPassword }) => {
-    // Validaciones
-    if (!name || !lastname || !cedula || !password) {
+    if (!name || !lastname || !cedula || !password)
       throw new Error('Todos los campos son obligatorios')
-    }
-
-    if (password.length < 6) {
+    if (password.length < 6)
       throw new Error('La contraseña debe tener al menos 6 caracteres')
-    }
-
-    if (password !== confirmPassword) {
+    if (password !== confirmPassword)
       throw new Error('Las contraseñas no coinciden')
-    }
 
     // Verificar si ya existe el usuario
-    const existingUser = getUserByCedula(cedula)
-    if (existingUser) {
-      throw new Error('Ya existe una cuenta con esta cédula')
-    }
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('cedula', cedula)
+      .maybeSingle()
 
-    // Crear usuario
-    const newUser = createUser({
+    if (existing) throw new Error('Ya existe una cuenta con esta cédula')
+
+    // Hash de la contraseña antes de guardar
+    const passwordHash = await hashPassword(password)
+
+    const newUser = {
+      id: `user_${Date.now()}`,
+      cedula,
       name,
       lastname,
-      cedula,
-      password // En producción, esto debería estar encriptado
-    })
+      password_hash: passwordHash,
+      created_at: new Date().toISOString(),
+    }
 
-    return newUser
+    const { data, error } = await supabase
+      .from('users')
+      .insert(newUser)
+      .select()
+      .single()
+
+    if (error) throw new Error('Error al crear la cuenta: ' + error.message)
+
+    const { password_hash: _, ...userWithoutHash } = data
+    return userWithoutHash
   }
 
   const login = async ({ cedula, password }) => {
-    // Validaciones
-    if (!cedula || !password) {
+    if (!cedula || !password)
       throw new Error('Cédula y contraseña son obligatorios')
-    }
 
-    // Buscar usuario
-    const user = getUserByCedula(cedula)
-    
-    if (!user || user.password !== password) {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('cedula', cedula)
+      .maybeSingle()
+
+    if (error || !user)
       throw new Error('Cédula o contraseña incorrectos')
-    }
 
-    // Guardar sesión (sin la contraseña)
-    const { password: _, ...userWithoutPassword } = user
-    setCurrentUser(userWithoutPassword)
+    // Verificar contraseña hasheada
+    const passwordHash = await hashPassword(password)
+    if (user.password_hash !== passwordHash)
+      throw new Error('Cédula o contraseña incorrectos')
 
-    return userWithoutPassword
+    // Guardar sesión sin el hash
+    const { password_hash: _, ...userWithoutHash } = user
+    setCurrentUser(userWithoutHash)
+    return userWithoutHash
   }
 
-  const logout = () => {
-    setCurrentUser(null)
-  }
+  const logout = () => setCurrentUser(null)
 
   const value = {
     currentUser,
@@ -100,7 +117,7 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     register,
     login,
-    logout
+    logout,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

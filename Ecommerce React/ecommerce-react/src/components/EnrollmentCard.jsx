@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Badge } from './ui/Badge'
 import { Button } from './ui/Button'
-import { Play, CheckCircle, Clock } from 'lucide-react'
+import { Play, CheckCircle, Clock, RotateCcw } from 'lucide-react'
 
 const EnrollmentCard = ({ enrollment, course }) => {
   const navigate = useNavigate()
+
+  // ✅ Usar course_id (snake_case de Supabase) y ruta /aprender/
+  const courseId = enrollment.course_id
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -15,21 +18,21 @@ const EnrollmentCard = ({ enrollment, course }) => {
         variant: 'secondary',
         icon: Clock,
         buttonText: 'Comenzar',
-        buttonAction: () => navigate(`/course/${course.id}`)
+        buttonAction: () => navigate(`/aprender/${courseId}`)
       },
       in_progress: {
         label: 'En Progreso',
         variant: 'default',
         icon: Play,
         buttonText: 'Continuar',
-        buttonAction: () => navigate(`/course/${course.id}`)
+        buttonAction: () => navigate(`/aprender/${courseId}`)
       },
       completed: {
         label: 'Completado',
         variant: 'outline',
         icon: CheckCircle,
         buttonText: 'Ver Curso',
-        buttonAction: () => navigate(`/course/${course.id}`)
+        buttonAction: () => navigate(`/aprender/${courseId}`)
       }
     }
     return configs[status] || configs.not_started
@@ -47,8 +50,14 @@ const EnrollmentCard = ({ enrollment, course }) => {
       whileHover={{ y: -4, scale: 1.02 }}
     >
       {/* Course Image */}
-      <div className="relative h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-        <span className="text-6xl">{course.icon || '📚'}</span>
+      <div className="relative h-48 bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden">
+        {course.image ? (
+          <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <span className="text-6xl">📚</span>
+          </div>
+        )}
         <div className="absolute top-3 right-3">
           <Badge variant={statusConfig.variant} className="gap-1">
             <StatusIcon className="w-3 h-3" />
@@ -85,43 +94,24 @@ const EnrollmentCard = ({ enrollment, course }) => {
         {/* Action Buttons */}
         <div className="flex gap-2 mb-4">
           {enrollment.status === 'in_progress' && (
-            <Button
-              variant="default"
-              size="sm"
-              className="flex-1"
-              onClick={() => navigate(`/aprender/${enrollment.courseId}`)}
-            >
+            <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/aprender/${courseId}`)}>
               <Play className="w-4 h-4 mr-1" />
               Continuar
             </Button>
           )}
           {enrollment.status === 'not_started' && (
-            <Button
-              variant="default"
-              size="sm"
-              className="flex-1"
-              onClick={() => navigate(`/aprender/${enrollment.courseId}`)}
-            >
+            <Button variant="default" size="sm" className="flex-1" onClick={() => navigate(`/aprender/${courseId}`)}>
               <Play className="w-4 h-4 mr-1" />
               Comenzar
             </Button>
           )}
           {enrollment.status === 'completed' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => navigate(`/aprender/${enrollment.courseId}`)}
-            >
+            <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/aprender/${courseId}`)}>
               <RotateCcw className="w-4 h-4 mr-1" />
               Repasar
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(`/curso/${enrollment.courseId}`)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/curso/${courseId}`)}>
             Ver Detalles
           </Button>
         </div>
@@ -136,7 +126,7 @@ const EnrollmentCard = ({ enrollment, course }) => {
           </div>
         )}
 
-        {/* Action Button */}
+        {/* Main Action Button */}
         <Button
           onClick={statusConfig.buttonAction}
           className="w-full"

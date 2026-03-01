@@ -1,31 +1,31 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Header } from "../components/Header";
 import { Hero } from "../components/Hero";
 import { CourseGrid } from "../components/CourseGrid";
 import { Categories } from "../components/Categories";
 import { Footer } from "../components/Footer";
-import { courses } from "../lib/data";
+import { getCourses } from "../lib/data";
 import { PageTransition } from "../components/PageTransition";
 import { useSearch } from "../context/SearchContext";
 
 export function Home() {
     const { searchQuery } = useSearch();
+    const [allCourses, setAllCourses] = useState([]);
+
+    useEffect(() => {
+        getCourses().then(setAllCourses);
+    }, []);
 
     // Filter courses based on search query
     const filteredCourses = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return courses;
-        }
-
+        if (!searchQuery.trim()) return allCourses;
         const query = searchQuery.toLowerCase().trim();
-        return courses.filter((course) => {
-            return (
-                course.title.toLowerCase().includes(query) ||
-                course.description.toLowerCase().includes(query) ||
-                course.instructor.toLowerCase().includes(query)
-            );
-        });
-    }, [searchQuery]);
+        return allCourses.filter((course) =>
+            course.title.toLowerCase().includes(query) ||
+            course.description.toLowerCase().includes(query) ||
+            course.instructor.toLowerCase().includes(query)
+        );
+    }, [searchQuery, allCourses]);
 
     return (
         <PageTransition>

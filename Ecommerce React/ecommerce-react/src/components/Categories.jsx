@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { memo } from "react";
-import { categories } from "../lib/data";
+import { memo, useState, useEffect } from "react";
+import { getCategories } from "../lib/data";
 
 // Componente individual memoizado para mejor rendimiento
 const CategoryItem = memo(function CategoryItem({ category }) {
@@ -18,6 +18,12 @@ const CategoryItem = memo(function CategoryItem({ category }) {
 });
 
 export const Categories = memo(function Categories() {
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        getCategories().then(setCategories);
+    }, []);
+
     return (
         <section className="py-12 bg-muted/50">
             <div className="max-w-7xl mx-auto px-4">

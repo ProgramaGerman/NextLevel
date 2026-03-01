@@ -35,8 +35,8 @@ const Payment = () => {
     const cartItems = location.state?.cartItems || []
     const totalAmount = location.state?.totalAmount || '0.00'
     
-    // For single course purchases (legacy)
-    const course = !isCartPurchase ? getCourseById(id) : null
+    // For single course purchases — load async
+    const [course, setCourse] = useState(null)
     const selectedPlan = location.state?.plan
     const planData = location.state?.planData
 
@@ -78,7 +78,10 @@ const Payment = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0)
-    }, [])
+        if (!isCartPurchase) {
+            getCourseById(id).then(setCourse)
+        }
+    }, [id, isCartPurchase])
 
     // Redirect if no items to purchase
     useEffect(() => {
@@ -165,7 +168,7 @@ const Payment = () => {
         setProcesando(true)
 
         // Simular procesamiento
-        setTimeout(() => {
+        setTimeout(async () => {
             try {
                 // Generate invoice
                 const purchasedItems = isCartPurchase ? cartItems : [{
@@ -195,11 +198,13 @@ const Payment = () => {
                 const invoice = generateInvoice(purchasedItems, paymentDetails, customerInfo)
                 saveInvoice(invoice)
                 
-                // Create enrollments for each purchased course (if user is authenticated)
+                // ✅ FIXED: usar Promise.all para que los enroll sean awaited correctamente
                 if (isAuthenticated && currentUser) {
-                    purchasedItems.forEach(item => {
-                        enroll(item.id, item.title, item.category || 'otros')
-                    })
+                    await Promise.all(
+                        purchasedItems.map(item =>
+                            enroll(item.id, item.title, item.category || 'otros')
+                        )
+                    )
                 }
                 
                 // Clear cart if it was a cart purchase

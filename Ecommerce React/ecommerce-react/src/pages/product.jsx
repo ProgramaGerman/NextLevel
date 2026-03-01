@@ -1,7 +1,7 @@
 //seccion que muestra y visualiza el producto seleccionado, donde se muestra con mas detalles la informacion del 
 //producto seleccionado y realizar la compra
 
-import { useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getCourseById, getRelatedCourses } from "../lib/data";
 import { Users, ThumbsUp, Star, Instagram } from "lucide-react";
@@ -17,21 +17,31 @@ import { PageTransition } from "../components/PageTransition";
 
 const Product = () => {
     const { id } = useParams();
-    
-    // Scroll al inicio cuando se carga la página
+    const [course, setCourse] = useState(null);
+    const [relatedCourses, setRelatedCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         window.scrollTo(0, 0);
-    }, []);
-    
-    // Use optimized lookup function
-    const course = getCourseById(id);
-    
-    // Memoize related courses to avoid recalculation
-    const relatedCourses = useMemo(() => {
-        return course ? getRelatedCourses(id, 3) : [];
-    }, [id, course]);
+        setLoading(true);
+        getCourseById(id).then((c) => {
+            setCourse(c);
+            if (c) getRelatedCourses(id, 3).then(setRelatedCourses);
+            setLoading(false);
+        });
+    }, [id]);
 
     // Si no se encuentra el curso, mostrar mensaje
+    if (loading) {
+        return (
+            <PageTransition>
+                <div className="min-h-screen bg-background flex items-center justify-center">
+                    <div className="text-center text-muted-foreground">Cargando curso...</div>
+                </div>
+            </PageTransition>
+        );
+    }
+
     if (!course) {
         return (
             <PageTransition>

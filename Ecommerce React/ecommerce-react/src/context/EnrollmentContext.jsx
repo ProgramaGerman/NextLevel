@@ -1,129 +1,147 @@
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { supabase } from '../env/KeySupabase'
 import { useAuth } from './AuthContext'
-import { useData } from './DataContext'
 
 const EnrollmentContext = createContext(null)
 
 export const useEnrollment = () => {
   const context = useContext(EnrollmentContext)
-  if (!context) {
-    throw new Error('useEnrollment debe usarse dentro de EnrollmentProvider')
-  }
+  if (!context) throw new Error('useEnrollment debe usarse dentro de EnrollmentProvider')
   return context
 }
 
 export const EnrollmentProvider = ({ children }) => {
   const { currentUser } = useAuth()
-  const { 
-    getUserEnrollments, 
-    getEnrollmentByCourse,
-    createEnrollment,
-    updateEnrollment 
-  } = useData()
+  const [enrollments, setEnrollments] = useState([])
+  const [loadingEnrollments, setLoadingEnrollments] = useState(false)
 
-  // Obtener todos los enrollments del usuario actual
-  const getMyEnrollments = () => {
-    if (!currentUser) return []
-    return getUserEnrollments(currentUser.id)
-  }
+  // Cargar enrollments cuando cambia el usuario
+  const loadEnrollments = useCallback(async () => {
+    if (!currentUser) { setEnrollments([]); return }
+    setLoadingEnrollments(true)
+    const { data, error } = await supabase
+      .from('enrollments')
+      .select('*')
+      .eq('user_id', currentUser.id)
+    if (!error && data) setEnrollments(data)
+    setLoadingEnrollments(false)
+  }, [currentUser])
+
+  useEffect(() => { loadEnrollments() }, [loadEnrollments])
+
+  // Obtener todos los enrollments del usuario
+  const getMyEnrollments = () => enrollments
 
   // Verificar si el usuario tiene acceso a un curso
   const hasAccess = (courseId) => {
     if (!currentUser) return false
-    const enrollment = getEnrollmentByCourse(currentUser.id, courseId)
-    return !!enrollment
+    return enrollments.some(e => e.course_id === courseId)
   }
 
-  // Obtener enrollment específico del usuario
+  // Obtener enrollment específico de un curso
   const getMyEnrollment = (courseId) => {
     if (!currentUser) return null
-    return getEnrollmentByCourse(currentUser.id, courseId)
+    return enrollments.find(e => e.course_id === courseId) || null
   }
 
-  // Crear enrollment (inscribir usuario a curso)
-  const enroll = (courseId, courseTitle, courseCategory = 'otros') => {
-    if (!currentUser) {
-      throw new Error('Debes iniciar sesión para inscribirte')
+  // Inscribir usuario a curso
+  const enroll = async (courseId, courseTitle, courseCategory = 'otros') => {
+    if (!currentUser) throw new Error('Debes iniciar sesión para inscribirte')
+
+    const existing = enrollments.find(e => e.course_id === courseId)
+    if (existing) return existing
+
+    const newEnrollment = {
+      id: `enrollment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      user_id: currentUser.id,
+      course_id: courseId,
+      status: 'not_started',
+      progress: 0,
+      score: 0,
+      created_at: new Date().toISOString(),
     }
 
-    const existingEnrollment = getEnrollmentByCourse(currentUser.id, courseId)
-    if (existingEnrollment) {
-      return existingEnrollment
-    }
+    const { data, error } = await supabase
+      .from('enrollments')
+      .insert(newEnrollment)
+      .select()
+      .single()
 
-    return createEnrollment({
-      userId: currentUser.id,
-      courseId,
-      courseTitle,
-      courseCategory
-    })
+    if (error) throw new Error('Error al inscribirse: ' + error.message)
+    setEnrollments(prev => [...prev, data])
+    return data
   }
 
-  // Actualizar progreso de un curso
-  const updateProgress = (enrollmentId, progress, status = null) => {
-    const updates = { progress }
-    
-    if (status) {
-      updates.status = status
+  // Actualizar progreso — auto-sets in_progress status
+  const updateProgress = async (enrollmentId, progress, status = null) => {
+    const updates = {
+      progress,
+      status: status || 'in_progress', // siempre pasa a in_progress al actualizar
     }
 
-    // Si se completa, marcar fecha
-    if (progress >= 100 && status === 'in_progress') {
-      updates.status = 'in_progress' // Esperar a que complete el quiz
-    }
+    const { error } = await supabase
+      .from('enrollments')
+      .update(updates)
+      .eq('id', enrollmentId)
 
-    updateEnrollment(enrollmentId, updates)
+    if (!error) {
+      setEnrollments(prev =>
+        prev.map(e => e.id === enrollmentId ? { ...e, ...updates } : e)
+      )
+    }
   }
 
-  // Completar curso con calificación
-  const completeCourse = (enrollmentId, score) => {
-    updateEnrollment(enrollmentId, {
+  // Completar curso
+  const completeCourse = async (enrollmentId, score) => {
+    const updates = {
       status: 'completed',
       progress: 100,
       score,
-      completedAt: new Date().toISOString()
-    })
-  }
+      // completed_at no incluido — columna puede no existir aún en la DB
+    }
 
-  // Obtener estadísticas del usuario
-  const getMyStats = () => {
-    const enrollments = getMyEnrollments()
-    
-    const inProgress = enrollments.filter(e => e.status === 'in_progress').length
-    const completed = enrollments.filter(e => e.status === 'completed').length
-    const notStarted = enrollments.filter(e => e.status === 'not_started').length
-    
-    const completedEnrollments = enrollments.filter(e => e.status === 'completed')
-    const avgScore = completedEnrollments.length > 0
-      ? Math.round(completedEnrollments.reduce((sum, e) => sum + e.score, 0) / completedEnrollments.length)
-      : 0
+    const { error } = await supabase
+      .from('enrollments')
+      .update(updates)
+      .eq('id', enrollmentId)
 
-    return {
-      total: enrollments.length,
-      inProgress,
-      completed,
-      notStarted,
-      avgScore
+    if (!error) {
+      setEnrollments(prev =>
+        prev.map(e => e.id === enrollmentId ? { ...e, ...updates } : e)
+      )
+    } else {
+      console.error('Error al completar curso:', error.message)
     }
   }
 
-  // Filtrar enrollments por estado
+  // Estadísticas del usuario (síncrono porque enrollments está en estado)
+  const getMyStats = () => {
+    const inProgress  = enrollments.filter(e => e.status === 'in_progress').length
+    const completed   = enrollments.filter(e => e.status === 'completed').length
+    const notStarted  = enrollments.filter(e => e.status === 'not_started').length
+    const completedList = enrollments.filter(e => e.status === 'completed')
+    const avgScore = completedList.length > 0
+      ? Math.round(completedList.reduce((sum, e) => sum + e.score, 0) / completedList.length)
+      : 0
+
+    return { total: enrollments.length, inProgress, completed, notStarted, avgScore }
+  }
+
+  // Filtrar por estado
   const filterByStatus = (status) => {
-    const enrollments = getMyEnrollments()
     if (status === 'all') return enrollments
     return enrollments.filter(e => e.status === status)
   }
 
-  // Check if user has completed a specific course
+  // Verificar si completó un curso específico
   const hasCompletedCourse = (userId, courseId) => {
-    if (!currentUser || currentUser.id !== userId) return false
-    
-    const allEnrollments = getMyEnrollments()
-    const enrollment = allEnrollments.find(e => e.courseId === courseId)
+    const enrollment = enrollments.find(e => e.course_id === courseId)
     return enrollment?.status === 'completed'
   }
 
   const value = {
+    enrollments,
+    loadingEnrollments,
     getMyEnrollments,
     hasAccess,
     getMyEnrollment,
@@ -132,7 +150,8 @@ export const EnrollmentProvider = ({ children }) => {
     completeCourse,
     getMyStats,
     filterByStatus,
-    hasCompletedCourse
+    hasCompletedCourse,
+    refreshEnrollments: loadEnrollments,
   }
 
   return <EnrollmentContext.Provider value={value}>{children}</EnrollmentContext.Provider>

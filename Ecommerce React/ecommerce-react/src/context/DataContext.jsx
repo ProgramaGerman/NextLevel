@@ -1,185 +1,184 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "../env/KeySupabase";
 
 const DataContext = createContext(null);
 
 export const useData = () => {
   const context = useContext(DataContext);
-  if (!context) {
-    throw new Error("useData debe usarse dentro de DataProvider");
-  }
+  if (!context) throw new Error("useData debe usarse dentro de DataProvider");
   return context;
 };
 
 export const DataProvider = ({ children }) => {
-  const [data, setData] = useState({
-    users: [],
-    enrollments: [],
-    payments: [],
-    reviews: [],
-    courseComments: [],
-  });
+  const [loading, setLoading] = useState(false);
 
-  // Cargar datos del localStorage al iniciar
-  useEffect(() => {
-    const savedData = localStorage.getItem("lms_data");
-    if (savedData) {
-      try {
-        setData(JSON.parse(savedData));
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-      }
-    }
-  }, []);
-
-  // Guardar datos en localStorage cada vez que cambien
-  useEffect(() => {
-    localStorage.setItem("lms_data", JSON.stringify(data));
-  }, [data]);
-
-  // Usuarios
-  const createUser = (userData) => {
+  // ──────────────────────────────────────────
+  // USUARIOS
+  // ──────────────────────────────────────────
+  const createUser = async (userData) => {
     const newUser = {
       id: `user_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      ...userData,
+      created_at: new Date().toISOString(),
+      cedula: userData.cedula,
+      name: userData.name,
+      email: userData.email,
     };
-    setData((prev) => ({
-      ...prev,
-      users: [...prev.users, newUser],
-    }));
-    return newUser;
+    const { data, error } = await supabase.from("users").insert(newUser).select().single();
+    if (error) { console.error("Error al crear usuario:", error); return null; }
+    return data;
   };
 
-  const getUserByCedula = (cedula) => {
-    return data.users.find((user) => user.cedula === cedula);
+  const getUserByCedula = async (cedula) => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("cedula", cedula)
+      .single();
+    if (error) return null;
+    return data;
   };
 
-  const updateUser = (userId, updates) => {
-    setData((prev) => ({
-      ...prev,
-      users: prev.users.map((user) =>
-        user.id === userId ? { ...user, ...updates } : user,
-      ),
-    }));
+  const updateUser = async (userId, updates) => {
+    const { error } = await supabase.from("users").update(updates).eq("id", userId);
+    if (error) console.error("Error al actualizar usuario:", error);
   };
 
-  // Enrollments (inscripciones a cursos)
-  const createEnrollment = (enrollmentData) => {
+  // ──────────────────────────────────────────
+  // ENROLLMENTS (inscripciones)
+  // ──────────────────────────────────────────
+  const createEnrollment = async (enrollmentData) => {
     const newEnrollment = {
       id: `enrollment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       status: "not_started",
       progress: 0,
       score: 0,
-      createdAt: new Date().toISOString(),
-      completedAt: null,
+      created_at: new Date().toISOString(),
+      completed_at: null,
+      user_id: enrollmentData.userId,
+      course_id: enrollmentData.courseId,
       ...enrollmentData,
     };
-    setData((prev) => ({
-      ...prev,
-      enrollments: [...prev.enrollments, newEnrollment],
-    }));
-    return newEnrollment;
+    const { data, error } = await supabase.from("enrollments").insert(newEnrollment).select().single();
+    if (error) { console.error("Error al crear inscripción:", error); return null; }
+    return data;
   };
 
-  const updateEnrollment = (enrollmentId, updates) => {
-    setData((prev) => ({
-      ...prev,
-      enrollments: prev.enrollments.map((enrollment) =>
-        enrollment.id === enrollmentId
-          ? { ...enrollment, ...updates }
-          : enrollment,
-      ),
-    }));
+  const updateEnrollment = async (enrollmentId, updates) => {
+    const { error } = await supabase.from("enrollments").update(updates).eq("id", enrollmentId);
+    if (error) console.error("Error al actualizar inscripción:", error);
   };
 
-  const getUserEnrollments = (userId) => {
-    return data.enrollments.filter(
-      (enrollment) => enrollment.userId === userId,
-    );
+  const getUserEnrollments = async (userId) => {
+    const { data, error } = await supabase
+      .from("enrollments")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) { console.error("Error al obtener inscripciones:", error); return []; }
+    return data;
   };
 
-  const getEnrollmentByCourse = (userId, courseId) => {
-    return data.enrollments.find(
-      (enrollment) =>
-        enrollment.userId === userId && enrollment.courseId === courseId,
-    );
+  const getEnrollmentByCourse = async (userId, courseId) => {
+    const { data, error } = await supabase
+      .from("enrollments")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("course_id", courseId)
+      .single();
+    if (error) return null;
+    return data;
   };
 
-  // Payments (historial de pagos)
-  const createPayment = (paymentData) => {
+  // ──────────────────────────────────────────
+  // PAYMENTS (pagos)
+  // ──────────────────────────────────────────
+  const createPayment = async (paymentData) => {
     const newPayment = {
       id: `payment_${Date.now()}`,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      user_id: paymentData.userId,
+      course_id: paymentData.courseId,
+      amount: paymentData.amount,
       ...paymentData,
     };
-    setData((prev) => ({
-      ...prev,
-      payments: [...prev.payments, newPayment],
-    }));
-    return newPayment;
+    const { data, error } = await supabase.from("payments").insert(newPayment).select().single();
+    if (error) { console.error("Error al crear pago:", error); return null; }
+    return data;
   };
 
-  const getUserPayments = (userId) => {
-    return data.payments.filter((payment) => payment.userId === userId);
+  const getUserPayments = async (userId) => {
+    const { data, error } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) { console.error("Error al obtener pagos:", error); return []; }
+    return data;
   };
 
-  // Reviews (opiniones globales)
-  const createReview = (reviewData) => {
+  // ──────────────────────────────────────────
+  // REVIEWS (opiniones globales)
+  // ──────────────────────────────────────────
+  const createReview = async (reviewData) => {
     const newReview = {
       id: `review_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      ...reviewData,
+      created_at: new Date().toISOString(),
+      user_id: reviewData.userId,
+      rating: reviewData.rating,
+      comment: reviewData.comment,
     };
-    setData((prev) => ({
-      ...prev,
-      reviews: [...prev.reviews, newReview],
-    }));
-    return newReview;
+    const { data, error } = await supabase.from("reviews").insert(newReview).select().single();
+    if (error) { console.error("Error al crear reseña:", error); return null; }
+    return data;
   };
 
-  const getReviews = () => {
-    return data.reviews;
+  const getReviews = async () => {
+    const { data, error } = await supabase.from("reviews").select("*");
+    if (error) { console.error("Error al obtener reseñas:", error); return []; }
+    return data;
   };
 
-  // Course Comments (comentarios por curso)
-  const createCourseComment = (commentData) => {
+  // ──────────────────────────────────────────
+  // COURSE COMMENTS (comentarios por curso)
+  // ──────────────────────────────────────────
+  const createCourseComment = async (commentData) => {
     const newComment = {
       id: `comment_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      ...commentData,
+      created_at: new Date().toISOString(),
+      user_id: commentData.userId,
+      course_id: commentData.courseId,
+      comment: commentData.comment,
     };
-    setData((prev) => ({
-      ...prev,
-      courseComments: [...prev.courseComments, newComment],
-    }));
-    return newComment;
+    const { data, error } = await supabase.from("course_comments").insert(newComment).select().single();
+    if (error) { console.error("Error al crear comentario:", error); return null; }
+    return data;
   };
 
-  const getCourseComments = (courseId) => {
-    return data.courseComments.filter(
-      (comment) => comment.courseId === courseId,
-    );
+  const getCourseComments = async (courseId) => {
+    const { data, error } = await supabase
+      .from("course_comments")
+      .select("*")
+      .eq("course_id", courseId);
+    if (error) { console.error("Error al obtener comentarios:", error); return []; }
+    return data;
   };
 
-  // Estadísticas
-  const getStats = () => {
-    return {
-      totalUsers: data.users.length,
-      totalEnrollments: data.enrollments.length,
-      totalCompletions: data.enrollments.filter((e) => e.status === "completed")
-        .length,
-      averageRating:
-        data.reviews.length > 0
-          ? (
-              data.reviews.reduce((sum, r) => sum + r.rating, 0) /
-              data.reviews.length
-            ).toFixed(1)
-          : 0,
-    };
+  // ──────────────────────────────────────────
+  // ESTADÍSTICAS
+  // ──────────────────────────────────────────
+  const getStats = async () => {
+    const [{ count: totalUsers }, { count: totalEnrollments }, { count: totalCompletions }, reviews] = await Promise.all([
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase.from("enrollments").select("*", { count: "exact", head: true }),
+      supabase.from("enrollments").select("*", { count: "exact", head: true }).eq("status", "completed"),
+      supabase.from("reviews").select("rating"),
+    ]);
+    const avgRating = reviews.data?.length > 0
+      ? (reviews.data.reduce((sum, r) => sum + r.rating, 0) / reviews.data.length).toFixed(1)
+      : 0;
+    return { totalUsers, totalEnrollments, totalCompletions, averageRating: avgRating };
   };
 
   const value = {
-    data,
+    loading,
     // Users
     createUser,
     getUserByCedula,

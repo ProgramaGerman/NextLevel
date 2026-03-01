@@ -17,10 +17,16 @@ import { Check, Star, Users, Clock, Download, Award, CheckCircle2 } from 'lucide
 const Buy = () => {
     const { id } = useParams()
     const navigate = useNavigate()
-    const course = getCourseById(id)
+    const [course, setCourse] = useState(null)
+    const [loadingCourse, setLoadingCourse] = useState(true)
     const [selectedPlan, setSelectedPlan] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [tempSelectedPlan, setTempSelectedPlan] = useState(null)
+
+    useEffect(() => {
+        setLoadingCourse(true)
+        getCourseById(id).then(c => { setCourse(c); setLoadingCourse(false) })
+    }, [id])
 
     // Scroll al inicio cuando se carga la página
     useEffect(() => {
@@ -98,6 +104,16 @@ const Buy = () => {
             color: 'from-yellow-500 to-orange-600'
         }
     ]
+
+    if (loadingCourse) {
+        return (
+            <PageTransition>
+                <div className="min-h-screen bg-background flex items-center justify-center">
+                    <div className="text-muted-foreground">Cargando curso...</div>
+                </div>
+            </PageTransition>
+        )
+    }
 
     if (!course) {
         return (
